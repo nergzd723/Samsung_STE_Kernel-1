@@ -77,6 +77,10 @@ static unsigned int hispeed_freq = 600000;
 #define DEFAULT_GO_HISPEED_LOAD 90
 static unsigned long go_hispeed_load = DEFAULT_GO_HISPEED_LOAD;
 
+/* Go to min speed when CPU load at or below this value. */
+#define DEFAULT_GO_MINSPEED_LOAD 5
+static unsigned long go_minspeed_load = DEFAULT_GO_MINSPEED_LOAD;
+
 /* Sampling down factor to be applied to min_sample_time at max freq */
 static unsigned int sampling_down_factor;
 
@@ -381,6 +385,8 @@ static void cpufreq_interactive_timer(unsigned long data)
 			if (new_freq < boosted_freq)
 				new_freq = boosted_freq;
 		}
+	} else if (cpu_load <= go_minspeed_load) {
+		new_freq = pcpu->policy->min;
 	} else {
 		new_freq = pcpu->policy->max * cpu_load / 100;
 		if (new_freq > boosted_freq &&
@@ -884,6 +890,28 @@ static ssize_t store_go_hispeed_load(struct kobject *kobj,
 static struct global_attr go_hispeed_load_attr = __ATTR(go_hispeed_load, 0644,
 		show_go_hispeed_load, store_go_hispeed_load);
 
+static ssize_t show_go_minspeed_load(struct kobject *kobj,
+				     struct attribute *attr, char *buf)
+{
+	return sprintf(buf, "%lu\n", go_minspeed_load);
+}
+
+static ssize_t store_go_minspeed_load(struct kobject *kobj,
+			struct attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = strict_strtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+	go_minspeed_load = val;
+	return count;
+}
+
+static struct global_attr go_minspeed_load_attr = __ATTR(go_minspeed_load, 0644,
+		show_go_minspeed_load, store_go_minspeed_load);
+
 static ssize_t show_min_sample_time(struct kobject *kobj,
 				struct attribute *attr, char *buf)
 {
@@ -1179,6 +1207,7 @@ static struct attribute *interactive_attributes[] = {
 	&above_hispeed_delay_attr.attr,
 	&hispeed_freq_attr.attr,
 	&go_hispeed_load_attr.attr,
+	&go_minspeed_load_attr.attr,
 	&min_sample_time_attr.attr,
 	&timer_rate_attr.attr,
 	&timer_slack.attr,
