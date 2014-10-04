@@ -30,7 +30,13 @@ static bool update_freq = false;
 static unsigned int suspend_max_freq = 800000;
 module_param(suspend_max_freq, uint, 0644);
 
-static u64 last_input_time;
+unsigned int input_boost_freq = 400000;
+module_param(input_boost_freq, uint, 0644);
+
+unsigned int input_boost_ms = 40;
+module_param(input_boost_ms, uint, 0644);
+
+u64 last_input_time;
 #define MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
 
 static int cpufreq_callback(struct notifier_block *nfb,
@@ -114,6 +120,9 @@ static void hotplug_input_event(struct input_handle *handle,
 		unsigned int type, unsigned int code, int value)
 {
 	u64 now;
+
+	if (!input_boost_freq)
+		return;
 
 	now = ktime_to_us(ktime_get());
 	if (now - last_input_time < MIN_INPUT_INTERVAL)
