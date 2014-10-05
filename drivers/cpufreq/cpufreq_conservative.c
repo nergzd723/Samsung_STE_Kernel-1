@@ -98,6 +98,10 @@ static struct dbs_tuners {
 	.freq_step = 10,
 };
 
+extern u64 last_input_time;
+extern unsigned int input_boost_ms;
+extern unsigned int input_boost_freq;
+
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
 							cputime64_t *wall)
 {
