@@ -22,6 +22,7 @@
 #include <linux/cpufreq.h>
 #include <linux/input.h>
 #include <linux/hrtimer.h>
+#include <linux/slab.h>
 
 static struct work_struct suspend_work;
 static struct work_struct resume_work;
