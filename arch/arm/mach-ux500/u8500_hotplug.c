@@ -1,7 +1,7 @@
 /*
  * arch/arm/mach-ux500/u8500_hotplug.c
  *
- * Copyright (c) 2014, Zhao Wei Liew <zhaoweiliew@gmail.com>. 
+ * Copyright (c) 2014, Zhao Wei Liew <zhaoweiliew@gmail.com>.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -23,6 +23,7 @@
 #include <linux/input.h>
 #include <linux/hrtimer.h>
 #include <linux/slab.h>
+#include <linux/u8500_hotplug.h>
 
 static struct work_struct suspend_work;
 static struct work_struct resume_work;
@@ -32,13 +33,12 @@ static bool update_freq = false;
 static unsigned int suspend_max_freq = 800000;
 module_param(suspend_max_freq, uint, 0644);
 
-unsigned int input_boost_freq = 400000;
+input_boost_freq = 400000;
 module_param(input_boost_freq, uint, 0644);
 
-unsigned int input_boost_ms = 40;
+input_boost_ms = 40;
 module_param(input_boost_ms, uint, 0644);
 
-u64 last_input_time;
 #define MIN_INPUT_INTERVAL (150 * USEC_PER_MSEC)
 
 static int cpufreq_callback(struct notifier_block *nfb,
@@ -63,14 +63,14 @@ static struct notifier_block cpufreq_notifier_block = {
 static void max_freq_limit(bool suspend)
 {
 	int cpu;
-	
+
 	max_freq = suspend ? suspend_max_freq : LONG_MAX;
-	
+
 	update_freq = true;
-	
+
 	for_each_online_cpu(cpu)
 		cpufreq_update_policy(cpu);
-		
+
 	update_freq = false;
 }
 
@@ -84,7 +84,7 @@ static void suspend_work_fn(struct work_struct *work)
 
 		cpu_down(cpu);
 	}
-	
+
 	max_freq_limit(true);
 
 }
