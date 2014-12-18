@@ -121,6 +121,10 @@ static int boostpulse_duration_val = DEFAULT_MIN_SAMPLE_TIME;
 /* End time of boost pulse in ktime converted to usecs */
 static u64 boostpulse_endtime;
 
+extern u64 last_input_time;
+extern unsigned int input_boost_ms;
+extern unsigned int input_boost_freq;
+
 /*
  * Max additional time to wait in idle, beyond timer_rate, at speeds above
  * minimum before wakeup to reduce speed, or -1 if unnecessary.
@@ -493,10 +497,10 @@ static void cpufreq_interactive_timer(unsigned long data)
 	do_div(cputime_speedadj, delta_time);
 	loadadjfreq = (unsigned int)cputime_speedadj * 100;
 	cpu_load = loadadjfreq / pcpu->policy->cur;
-	boosted = boost_val || now < boostpulse_endtime;
+	boosted = now < (last_input_time + input_boost_ms * 1000);
 	boosted_freq = max(hispeed_freq, pcpu->policy->min);
 
-	if (cpu_load >= go_hispeed_load || boosted) {
+	if (cpu_load >= go_hispeed_load) {
 		if (pcpu->policy->cur < boosted_freq) {
 			new_freq = boosted_freq;
 		} else {
@@ -510,6 +514,11 @@ static void cpufreq_interactive_timer(unsigned long data)
 		if (new_freq > boosted_freq &&
 				pcpu->target_freq < boosted_freq)
 			new_freq = boosted_freq;
+	}
+
+	if (boosted) {
+		if (new_freq < input_boost_freq)
+			new_freq = input_boost_freq;
 	}
 
 	pcpu->timer_rate = freq_to_timer_rate(new_freq);
